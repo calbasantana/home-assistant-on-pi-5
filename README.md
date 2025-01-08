@@ -19,17 +19,38 @@ While the official screen guide recommends to provide power to the screen throug
 # Software Installation
 Installing Home Assistant is, as mentioned before, the most difficult part, but let's get to it.
 
+## Installing Pi OS
 1. Place the microSD card from the Pi 5 kit inside a microSD card reader and connect it to your computer.
 2. Flash the default Pi OS using Pi Imager onto the microSD card and insert the SD card into your Pi. It will be tricky to get in there, but it's doable:
 
 ![Image_3](https://github.com/user-attachments/assets/a43f5660-72b6-49ff-a0b3-ca69b5b5ee23)
 
+3. Once you boot up the Pi and screen, this is what you should see:
 
-4. Once you boot up the Pi and screen, this is what you should see:
+![Image_4](https://github.com/user-attachments/assets/b0e3ce37-abb5-4c0d-baf7-c55581e134c5)
 
+4. Go through the installation procedure for Pi OS and then we will install Docker.
 
-5. Go through the installation procedure and get to the terminal.
-6. In the terminal, follow the Kiosk Setup guide from here: https://github.com/geerlingguy/pi-kiosk
+## Docker Installation
+
+5. To install Docker, I will be following this guide from: https://pimylifeup.com/raspberry-pi-docker/
+6. First, use:
+sudo apt update
+sudo apt upgrade
+7. Then run:
+curl -sSL https://get.docker.com | sh
+8. To add current user to Docker:
+sudo usermod -aG docker $USER
+logout
+9. After logging out, log back in, then verify user was added to Docker by using the following command:
+groups
+11. To test if Docker is running:
+docker run hello-world
+
+## Installing Home Assistant using Docker Compose
+
+12. 
+11. In the terminal, follow the Kiosk Setup guide from here: https://github.com/geerlingguy/pi-kiosk
 ##
 <tab><tab>code/text here
 
