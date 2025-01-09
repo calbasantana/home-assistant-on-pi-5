@@ -49,36 +49,33 @@ docker run hello-world
 
 ## Creating a Static IP for Home Assistant
 
-12. Here, I make use of the guide available at: https://pimylifeup.com/raspberry-pi-static-ip-address/
-13. First, run the following command:
-ip r | grep default
-14. Note the first IP that is mentioned in the result (something like 192.168.4.1 - this is your router IP).
-15. Retrieve the current DNS server by using the following command:
-sudo nano /etc/resolv.conf
-16. Make note of the IP next to nameserver (for me, this was 192.168.0.55 & 1.1.1.1).
-17. Exit the nano editor by pressing ctrl + X.
-18. Run the following command to bring up network tools:
-nmtui
-19. Click "Edit a Connection" and select your home connection. Go to IPv4 Configuration and, instead of automatic, make it manual.
-20. Click on "Show" to the right of "Manual."
-21. For Addresses, add an address that will not get confused for others on your network (192.168.0.88, for example). Your Gateway address is your router IP address and your DNS servers address can be your nameserver IP, or a third party one like Google (8.8.8.8) or Cloudflare (1.1.1.1).
-22. Navigate to the bottom and click "OK", then "Back" on the next screen, and "Quit" on the last screen.
-23. Now, restart the network manager:
-sudo systemctl restart NetworkManager
-24. Let's now modify the dhcpcd.conf file with the following command first:
+12. Here, I make use of the guide available at: https://raspberrypi.stackexchange.com/questions/37920/how-do-i-set-up-networking-wifi-static-ip-address-on-raspbian-raspberry-pi-os/74428#74428
+13. We will create a static IP through DHCP. First, run the following command:
+ip -4 addr show | grep global
+14. Note the first IP that is mentioned in the result (something like 192.168.4.185 - this is your Pi's IP and the one we will use to make a static IP). Also note the number that follows (/22 or /24; this is the network size and important later).
+15. Then, run the following command:
+ip route | grep default | awk '{print $3}'
+16.The result will be your router IP. Note this down as well (should look like 192.168.4.1).
+17. Finally, find your DNS server address with the following command:
+cat /etc/resolv.conf
+18. For me, this was 192.168.0.55 & 1.1.1.1; it's OK to have multiple, but I just wrote down the first one.
+19. We will create our static IP by doing the following:
 sudo nano /etc/dhcpcd.conf
-25. Write the following into that file:
-interface <NETWORK>
-static ip_address=<STATICIP>/24
-static routers=<ROUTERIP>
-static domain_name_servers=<DNSIP>
-26. For <NETWORK>, replace with "eth0" (Ethernet) or "wlan0" (Wi-Fi). Replace <STATICIP> with the address you put down in part 21. Replace <ROUTERIP> with the router IP from earlier and the <DNSIP> with the nameserver IP (or Google's or Cloudflare's third party options).
-27. Save the file with ctrl+X, then Y, then Enter.
-28. Reboot your pi:
+20. Here, insert the following (if using WiFi):
+interface wlan0
+static ip_address=192.168.4.185/22
+static routers=192.168.4.1
+static domain_name_servers=192.168.0.55
+21. Of course, insert your IPs instead of mine and remember the /22 is the network size, so if yours is different, insert a different value.
+24. Exit and save the nano editor by pressing ctrl + X, Y, then Enter.
+30. Now, restart the network manager:
+sudo systemctl restart NetworkManager
+31. Then reboot your pi:
 sudo reboot
-29. To test your static IP after rebooting, paste the following in your terminal:
+38. To test your static IP after rebooting, paste the following in your terminal:
 hostname -I
-30. You should now be able to see your new static IP address.
+39. You should now be able to see your new static IP address. Just to doublecheck, though, make sure you can access the Internet through a browser.
+
 ## Installing Home Assistant using Docker Compose
 
 31. For this next part of the guide, I relied on: https://pimylifeup.com/home-assistant-docker-compose/
@@ -174,4 +171,43 @@ sudo nano /opt/stacks/hass/configurator-config/settings.conf
 ## The Home Stretch
 56. To start up home assistant, enter the following on your command line:
 sudo docker compose up -d
-57. If you run into an issue ...
+57. You will get something like this; just give it a few minutes:
+IMAGE
+59. IMAGE
+
+## Setting Up Home Assistant
+60. Now, go to a browser page and insert the following (using your static IP instead of <IPADDRESS>:
+http://<IPADDRESS>:8123
+61. You will be greeted with the following:
+62. Sign up or log in and then let's set up the Dashboard once you're ready.
+63. To create your Dashboard, go to "Settings" on the bottom left (you may need to scroll). Then click on Dashboards.
+64. On the next screen, click "Add Dashboard" at the bottom right.
+65. You will have a list of different options for your Dashboard. I recommend clicking on "Webpage."
+66. You will now have an option of URL, which, for us can be one of two of the following:
+Node-RED: http://<IPADDRESS>:1880
+Configurator: http://<IPADDRESS>:3218
+68. Personally, I went with Node-RED.
+69. For Title, I recommend Node-RED if you went with that or Configurator if you went with that instead. Then choose whichever Icon you like. Do toggle the Admin setting to ON so it hides this element if the user is not an admin.
+70. You should now see Node-RED on the sidebar to the left. We must now configure Node-RED and MQTT.
+
+71. Click on your Profile at the bottom left corner, then the second "Security" tab. Scroll down until you see "Long-lived access tokens" and click "Create Token." Name it Node-RED.
+72. You will now have a very long string of letters, numbers, and other stuff; this token will allow Node-RED to communicate with the server. Copy it to your clipboard.
+73. Click on Node-RED from the sidebar to the left.
+74. Now, with Node-RED open, click on the three horizontal lines to the right, where my cursor is below:
+IMAGE
+75. Click on "Manage palette" and then on the "Install" tab. In the searchbar, search for:
+node-red-contrib-home-assistant-websocket
+76. Press "Install" and then "Install" in the next popup.
+77. Close out of the interface and then search where it says "filter nodes" for events:all.
+IMAGE
+78. Drag "events:all" to Flow 1. Then doubleclick the node to configure it.
+IMAGE
+79. Click the icon right of the pencil. Here, we will add Home Assistant Docker as a contactable server.
+80. Set the Base URL as
+http://<IPADDRESS>:8123
+81. For example, mine would be http://192.168.4.185:8123
+82. Paste the access token from your clipboard using Ctrl + v. Then, click "Add" and close the next interface. Click "Deploy" and you should get that it was successfully deployed.
+83. We will now add MQTT to Home Assistant. Click on Settings on the sidebar to the left, then "Devices & services."
+84. Click "Add Integration" on the bottom right. Search for MQTT and then click on MQTT. You will be given another list of options. Click on the top one (just "MQTT").
+85. For broker, set it as the local address of your Home Assistant (for me, this would be 192.168.4.185) and click "Submit."
+86. You should now be all set! From here, you can customize your Dashboard further using Node-RED guides.
