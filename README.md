@@ -34,57 +34,91 @@ Installing Home Assistant is, as mentioned before, the most difficult part, but 
 
 5. To install Docker, I will be following this guide from: https://pimylifeup.com/raspberry-pi-docker/
 6. First, use:
+```bash
 sudo apt update
+```
+```bash
 sudo apt upgrade
+```
 7. Then run:
+```bash
 curl -sSL https://get.docker.com | sh
+```
 8. To add current user to Docker:
+```bash
 sudo usermod -aG docker $USER
+```
 9. Log out of your account and then log back in.
 10. After logging out, log back in, then verify user was added to Docker by using the following command:
+```bash
 groups
+```
 11. To test if Docker is running. run the following command (give it a few moments):
+```bash
 docker run hello-world
-
+```
 ## Creating a Static IP for Home Assistant
 
 12. Here, I make use of the guide available at: https://raspberrypi.stackexchange.com/questions/37920/how-do-i-set-up-networking-wifi-static-ip-address-on-raspbian-raspberry-pi-os/74428#74428
 13. We will create a static IP through DHCP. First, run the following command:
+```bash
 ip -4 addr show | grep global
+```
 14. Note the first IP that is mentioned in the result (something like 192.168.4.185 - this is your Pi's IP and the one we will use to make a static IP). Also note the number that follows (/22 or /24; this is the network size and important later).
 15. Then, run the following command:
+```bash
 ip route | grep default | awk '{print $3}'
+```
 16.The result will be your router IP. Note this down as well (should look like 192.168.4.1).
 17. Finally, find your DNS server address with the following command:
+```bash
 cat /etc/resolv.conf
+```
 18. For me, this was 192.168.0.55 & 1.1.1.1; it's OK to have multiple, but I just wrote down the first one.
 19. We will create our static IP by doing the following:
+```bash
 sudo nano /etc/dhcpcd.conf
+```
 20. Here, insert the following (if using WiFi):
+```bash
 interface wlan0
 static ip_address=192.168.4.185/22
 static routers=192.168.4.1
 static domain_name_servers=192.168.0.55
+```
 21. Of course, insert your IPs instead of mine and remember the /22 is the network size, so if yours is different, insert a different value.
-24. Exit and save the nano editor by pressing ctrl + X, Y, then Enter.
-30. Now, restart the network manager:
+22. Exit and save the nano editor by pressing ctrl + X, Y, then Enter.
+23. Now, restart the network manager:
+```bash
 sudo systemctl restart NetworkManager
-31. Then reboot your pi:
+```
+24. Then reboot your pi:
+```bash
 sudo reboot
-38. To test your static IP after rebooting, paste the following in your terminal:
+```
+25. To test your static IP after rebooting, paste the following in your terminal:
+```bash
 hostname -I
-39. You should now be able to see your new static IP address. Just to doublecheck, though, make sure you can access the Internet through a browser.
+```
+26. You should now be able to see your new static IP address. Just to doublecheck, though, make sure you can access the Internet through a browser.
 
 ## Installing Home Assistant using Docker Compose
 
-31. For this next part of the guide, I relied on: https://pimylifeup.com/home-assistant-docker-compose/
-32. First, create a directory for the Home Assistant Docker Compose file:
+27. For this next part of the guide, I relied on: https://pimylifeup.com/home-assistant-docker-compose/
+28. First, create a directory for the Home Assistant Docker Compose file:
+```bash
 sudo mkdir -p /opt/stacks/hass
-33. Go to the directory:
+```
+29. Go to the directory:
+```bash
 cd /opt/stacks/hass
-34. Let's write a Docker Compose file, first enter the following command to create it and edit it:
+```
+30. Let's write a Docker Compose file, first enter the following command to create it and edit it:
+```bash
 sudo nano compose.yaml
-35. Copy and paste the following:
+```
+31. Copy and paste the following:
+```bash
 services:
   homeassistant:
     container_name: homeassistant
@@ -95,7 +129,9 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: host
-36. In the above code, we make it so the config files for Home Assistant are kept within the /opt/stacks/hass/hass-config directory. Next, copy the next set of lines right below what was above:
+```
+32. In the above code, we make it so the config files for Home Assistant are kept within the /opt/stacks/hass/hass-config directory. Next, copy the next set of lines right below what was above:
+```bash
   nodered:
     container_name: nodered
     image: nodered/node-red
@@ -109,8 +145,10 @@ services:
     environment:
       - TZ=<TIMEZONE>
     restart: unless-stopped
-37. Replace "<TIMEZONE>" with a valid TZ Timezone value from: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones (for example, living in New York, you'd put "America/New_York."
-38. Now, add the next section (replacing the <TIMEZONE> for the same one as you wrote before in the last step and PUID/PGID with yours - to find these, type "id $USER" into terminal):
+```
+33. Replace "<TIMEZONE>" with a valid TZ Timezone value from: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones (for example, living in New York, you'd put "America/New_York."
+34. Now, add the next section (replacing the <TIMEZONE> for the same one as you wrote before in the last step and PUID/PGID with yours - to find these, type "id $USER" into terminal):
+```bash
   mosquitto:
     image: eclipse-mosquitto
     container_name: mosquitto
@@ -125,7 +163,9 @@ services:
     environment:
       - TZ=<TIMEZONE>
     user: "${PUID}:${PGID}"
-39. And lastly, add:
+```
+35. And lastly, add:
+ ```bash
   hass-configurator:
     image: "causticlab/hass-configurator-docker:latest"
     restart: always
@@ -134,79 +174,131 @@ services:
     volumes:
       - "/opt/stacks/hass/configurator-config:/config"
       - "/opt/stacks/hass/hass-config:/hass-config"
-40. Now, to save, press ctrl+X, then Y, then Enter.
-41. To enable data persistence and specify the location for mosquitto to log data, we will undertake the following steps.
-42. Enter the following into your terminal:
+```
+36. Now, to save, press ctrl+X, then Y, then Enter.
+37. To enable data persistence and specify the location for mosquitto to log data, we will undertake the following steps.
+38. Enter the following into your terminal:
+```bash
 sudo mkdir -p /opt/stacks/hass/mosquitto/config
-43. Then:
+```
+39. Then:
+```bash
 sudo nano /opt/stacks/hass/mosquitto/config/mosquitto.conf
-44. Within this file, copy and paste this:
+```
+40. Within this file, copy and paste this:
+```bash
 persistence true
 persistence_location /mosquitto/data/
 log_dest file /mosquitto/log/mosquitto.log
 listener 1883
 listener 9001
 allow_anonymous true
-45. Save with ctrl + X, then Y, then Enter.
-46. We will now create a user for the mosquitto docker container with UID and GID of 1883. Start off with creating the following:
+```
+41. Save with ctrl + X, then Y, then Enter.
+42. We will now create a user for the mosquitto docker container with UID and GID of 1883. Start off with creating the following:
+```bash
 sudo groupadd -g 1883 mosquitto
-47. Then, create user with the following:
+```
+43. Then, create user with the following:
+```bash
 sudo useradd -u 1883 -g 1883 mosquitto
-48. Then, to take ownership of the mosquitto directory:
+```
+44. Then, to take ownership of the mosquitto directory:
+```bash
 sudo chown -R mosquitto: /opt/stacks/hass/mosquitto
-49. Node-RED will want to operate under the user with UID 1000, so we must create the directory and take ownership over it:
+```
+45. Node-RED will want to operate under the user with UID 1000, so we must create the directory and take ownership over it:
+```bash
 sudo mkdir /opt/stacks/hass/nodered
-51. Then:
+```
+46. Then:
+```bash
 sudo chown 1000:1000 /opt/stacks/hass/nodered
-52. Now to configure the HASS Configurator:
+```
+47. Now to configure the HASS Configurator:
+```bash
 sudo mkdir /opt/stacks/hass/configurator-config
-53. Then:
+```
+48. Then:
+```bash
 sudo nano /opt/stacks/hass/configurator-config/settings.conf
-54. In here, insert:
+```
+49. In here, insert:
+```bash
 {
     "BASEPATH": "../hass-config"
 }
-55. To save, press ctrl+X, then Y, then Enter.
+```
+50. To save, press ctrl+X, then Y, then Enter.
+
 ## The Home Stretch
-56. To start up home assistant, enter the following on your command line:
+
+51. To start up home assistant, enter the following on your command line:
+```bash
 sudo docker compose up -d
-57. You will get something like this; just give it a few minutes:
-IMAGE
-59. IMAGE
+```
+52. You will get something like this; just give it a few minutes:
+
+![Image_5](https://github.com/user-attachments/assets/23fc653f-9003-4b1b-b01b-44537d5d276c)
 
 ## Setting Up Home Assistant
-60. Now, go to a browser page and insert the following (using your static IP instead of <IPADDRESS>:
+53. Now, go to a browser page and insert the following (using your static IP instead of <IPADDRESS>:
+```bash
 http://<IPADDRESS>:8123
-61. You will be greeted with the following:
-62. Sign up or log in and then let's set up the Dashboard once you're ready.
-63. To create your Dashboard, go to "Settings" on the bottom left (you may need to scroll). Then click on Dashboards.
-64. On the next screen, click "Add Dashboard" at the bottom right.
-65. You will have a list of different options for your Dashboard. I recommend clicking on "Webpage."
-66. You will now have an option of URL, which, for us can be one of two of the following:
-Node-RED: http://<IPADDRESS>:1880
-Configurator: http://<IPADDRESS>:3218
-68. Personally, I went with Node-RED.
-69. For Title, I recommend Node-RED if you went with that or Configurator if you went with that instead. Then choose whichever Icon you like. Do toggle the Admin setting to ON so it hides this element if the user is not an admin.
-70. You should now see Node-RED on the sidebar to the left. We must now configure Node-RED and MQTT.
+```
+54. You will be greeted with the following:
 
-71. Click on your Profile at the bottom left corner, then the second "Security" tab. Scroll down until you see "Long-lived access tokens" and click "Create Token." Name it Node-RED.
-72. You will now have a very long string of letters, numbers, and other stuff; this token will allow Node-RED to communicate with the server. Copy it to your clipboard.
-73. Click on Node-RED from the sidebar to the left.
-74. Now, with Node-RED open, click on the three horizontal lines to the right, where my cursor is below:
-IMAGE
-75. Click on "Manage palette" and then on the "Install" tab. In the searchbar, search for:
+![Image_6](https://github.com/user-attachments/assets/f53fcece-7df2-4e9b-a295-e925cdc55c6d)
+
+55. Sign up or log in and then let's set up the Dashboard once you're ready.
+56. To create your Dashboard, go to "Settings" on the bottom left (you may need to scroll). Then click on Dashboards.
+57. On the next screen, click "Add Dashboard" at the bottom right.
+58. You will have a list of different options for your Dashboard. I recommend clicking on "Webpage."
+59. You will now have an option of URL, which, for us can be one of two of the following:
+
+Node-RED:
+```bash
+http://<IPADDRESS>:1880
+```
+Configurator:
+```bash
+http://<IPADDRESS>:3218
+```
+60. Personally, I went with Node-RED.
+61. For Title, I recommend Node-RED if you went with that or Configurator if you went with that instead. Then choose whichever Icon you like. Do toggle the Admin setting to ON so it hides this element if the user is not an admin.
+62. You should now see Node-RED on the sidebar to the left. We must now configure Node-RED and MQTT.
+63. Click on your Profile at the bottom left corner, then the second "Security" tab. Scroll down until you see "Long-lived access tokens" and click "Create Token." Name it Node-RED.
+64. You will now have a very long string of letters, numbers, and other stuff; this token will allow Node-RED to communicate with the server. Copy it to your clipboard.
+65. Click on Node-RED from the sidebar to the left.
+66. Now, with Node-RED open, click on the three horizontal lines to the right, where my cursor is below:
+
+![Image_7](https://github.com/user-attachments/assets/218cf34c-57dc-4a29-8cfe-043092980e95)
+
+67. Click on "Manage palette" and then on the "Install" tab. In the searchbar, search for:
+```bash
 node-red-contrib-home-assistant-websocket
-76. Press "Install" and then "Install" in the next popup.
-77. Close out of the interface and then search where it says "filter nodes" for events:all.
-IMAGE
-78. Drag "events:all" to Flow 1. Then doubleclick the node to configure it.
-IMAGE
-79. Click the icon right of the pencil. Here, we will add Home Assistant Docker as a contactable server.
-80. Set the Base URL as
+```
+68. Press "Install" and then "Install" in the next popup.
+69. Close out of the interface and then search where it says "filter nodes" for events:all.
+
+![Image_8](https://github.com/user-attachments/assets/0b2164b1-d749-4157-9575-6b18dd565b1c)
+
+70. Drag "events:all" to Flow 1. Then doubleclick the node to configure it.
+
+![Image_9](https://github.com/user-attachments/assets/4f0b3606-ada9-4993-ad28-e6bc5c597874)
+
+
+71. Click the icon right of the pencil. Here, we will add Home Assistant Docker as a contactable server.
+
+![Image_10](https://github.com/user-attachments/assets/6d5c6b05-8aff-4c01-bb66-6b84d95528a2)
+
+72. Set the Base URL as
+```bash
 http://<IPADDRESS>:8123
-81. For example, mine would be http://192.168.4.185:8123
-82. Paste the access token from your clipboard using Ctrl + v. Then, click "Add" and close the next interface. Click "Deploy" and you should get that it was successfully deployed.
-83. We will now add MQTT to Home Assistant. Click on Settings on the sidebar to the left, then "Devices & services."
-84. Click "Add Integration" on the bottom right. Search for MQTT and then click on MQTT. You will be given another list of options. Click on the top one (just "MQTT").
-85. For broker, set it as the local address of your Home Assistant (for me, this would be 192.168.4.185) and click "Submit."
-86. You should now be all set! From here, you can customize your Dashboard further using Node-RED guides.
+```
+73. For example, mine would be http://192.168.4.185:8123
+74. Paste the access token from your clipboard using Ctrl + v. Then, click "Add" and close the next interface. Click "Deploy" and you should get that it was successfully deployed.
+75. We will now add MQTT to Home Assistant. Click on Settings on the sidebar to the left, then "Devices & services."
+76. Click "Add Integration" on the bottom right. Search for MQTT and then click on MQTT. You will be given another list of options. Click on the top one (just "MQTT").
+77. For broker, set it as the local address of your Home Assistant (for me, this would be 192.168.4.185) and click "Submit."
+78. You should now be all set! From here, you can customize your Dashboard further using Node-RED guides.
