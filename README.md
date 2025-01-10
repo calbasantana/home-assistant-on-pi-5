@@ -1,9 +1,8 @@
-IMAGE
-
+![Image_1](https://github.com/user-attachments/assets/635fd991-1529-4a37-a733-58e3cb115cbc)
 # Introduction
-I have been on the hunt for an open source smart home hub (not Google or Amazon) and I think I have finally found it in Home Assistant. Of course, this only covers creating the hub for it, but it should be fairly simple to connect the smart appliances to it after.
+I have been on the hunt for an open source smart home hub (not Google or Amazon) and I think I have finally found it in Home Assistant. Of course, this only covers creating the hub for it, as going much more beyond than is something that will be highly specific to each household.
 
-However, it wasn't as easy as I initially thought it would be to set it up because Home Assistant can be complicated. I did find a very useful guide on how to make a Pi Kiosk here: https://github.com/geerlingguy/pi-kiosk and it is this guide I am using to support me in creating a hub for Home Assistant.
+However, it wasn't as easy as I initially thought it would be to set it up because Home Assistant can be complicated. I was thankful there were many guides available, but had to kind of get different things from different guides and this resulted in a single project here, which combines all of them into one.
 # Home Assistant on Pi 5 Components
 The following components were purchased for this project:
 *  Vilros Raspberry Pi 5 Starter Kit MAX - Turbo Cooled Aluminum - (128GB Edition) - (8GB RAM) - purchased for $159.99 from: https://www.amazon.com/Vilros-Raspberry-Starter-Kit-MAX/dp/B0D232HN74/ref=sr_1_3?crid=2P7BOXQATJ26I&dib=eyJ2IjoiMSJ9.DOPSBKzDUbr_p92FPgJ0S7I_GQPuGx-2kEdYNtHX82YzEjwVX19U-FxrTyjFf1GMW7mS4XxAme2mS66pBtONwl5Oc9ZgW23N4Hj285ZBUSeGGdipj7VSn1tFj_t2PQ9Ja_jUEBykKs7ygOFvwzgFqG8eWdY0KfsUhYxljiroOwv83UOKlBB1gBEdImtrWIIx1w0KhTzjrDdKtNTDalcWRgt6sWqVlWaWTJycrEaoXlU.vulbTsX8tRrYN_3VAII8HSdWJk_5l0PEi7KnP2Bf54M&dib_tag=se&keywords=pi%2B5%2Bvilros%2Bstarter%2Bkit%2Bmax&qid=1736187449&sprefix=pi%2B5%2Bvilros%2Bstarter%2Bkit%2Bmax%2Caps%2C80&sr=8-3&th=1
